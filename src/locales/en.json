@@ -634,6 +634,7 @@
         "cloudRegions": "Cloud Regions",
         "aiDataCenters": "AI Data Centers",
         "underseaCables": "Undersea Cables",
+        "cableHealth": "Cables: Health",
         "internetOutages": "Internet Outages",
         "cyberThreats": "Cyber Threats",
         "techEvents": "Tech Events",
@@ -1116,7 +1117,20 @@
         "onStation": "On Station",
         "enRoute": "En Route"
       },
-      "description": "Undersea telecommunications cable carrying international internet traffic. These fiber optic cables form the backbone of global internet connectivity, transmitting over 95% of intercontinental data."
+      "description": "Undersea telecommunications cable carrying international internet traffic. These fiber optic cables form the backbone of global internet connectivity, transmitting over 95% of intercontinental data.",
+      "health": {
+        "title": "Cable Health",
+        "unknown": "Unknown",
+        "noData": "No health data available",
+        "noDataDesc": "Health monitoring has not yet received signals for this cable.",
+        "status": "Status",
+        "score": "Score",
+        "confidence": "Confidence",
+        "lastUpdate": "Last Update",
+        "evidence": "Evidence",
+        "noSignals": "No active signals.",
+        "cableInfo": "Cable Info"
+      }
     },
     "repairShip": {
       "note": "Repair vessel tracking indicates active deployment toward fault site.",

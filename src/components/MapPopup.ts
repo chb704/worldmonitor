@@ -1475,18 +1475,18 @@ export class MapPopup {
       return `
         <div class="popup-header cable">
           <span class="popup-title">🌐 ${cableName}</span>
-          <span class="popup-badge low">Unknown</span>
+          <span class="popup-badge low">${t('popups.cable.health.unknown')}</span>
           <button class="popup-close">×</button>
         </div>
         <div class="popup-body">
-          <div class="popup-subtitle">Cable Health</div>
+          <div class="popup-subtitle">${t('popups.cable.health.title')}</div>
           <div class="popup-stats">
             <div class="popup-stat">
-              <span class="stat-label">Status</span>
-              <span class="stat-value">No health data available</span>
+              <span class="stat-label">${t('popups.cable.health.status')}</span>
+              <span class="stat-value">${t('popups.cable.health.noData')}</span>
             </div>
           </div>
-          <p class="popup-description">Health monitoring has not yet received signals for this cable.</p>
+          <p class="popup-description">${t('popups.cable.health.noDataDesc')}</p>
         </div>
       `;
     }
@@ -1512,7 +1512,7 @@ export class MapPopup {
             </div>
           `;
         }).join('')
-      : '<p class="popup-description">No active signals.</p>';
+      : `<p class="popup-description">${t('popups.cable.health.noSignals')}</p>`;
 
     return `
       <div class="popup-header cable">
@@ -1521,34 +1521,34 @@ export class MapPopup {
         <button class="popup-close">×</button>
       </div>
       <div class="popup-body">
-        <div class="popup-subtitle">Cable Health</div>
+        <div class="popup-subtitle">${t('popups.cable.health.title')}</div>
         <div class="popup-stats">
           <div class="popup-stat">
-            <span class="stat-label">Status</span>
+            <span class="stat-label">${t('popups.cable.health.status')}</span>
             <span class="stat-value">${statusLabel}</span>
           </div>
           <div class="popup-stat">
-            <span class="stat-label">Score</span>
+            <span class="stat-label">${t('popups.cable.health.score')}</span>
             <span class="stat-value">${scorePercent}%</span>
           </div>
           <div class="popup-stat">
-            <span class="stat-label">Confidence</span>
+            <span class="stat-label">${t('popups.cable.health.confidence')}</span>
             <span class="stat-value">${confidencePercent}%</span>
           </div>
           <div class="popup-stat">
-            <span class="stat-label">Last Update</span>
+            <span class="stat-label">${t('popups.cable.health.lastUpdate')}</span>
             <span class="stat-value">${lastUpdated}</span>
           </div>
         </div>
         <div class="popup-section">
-          <span class="section-label">Evidence</span>
+          <span class="section-label">${t('popups.cable.health.evidence')}</span>
           <div class="popup-evidence-list">
             ${evidenceHtml}
           </div>
         </div>
         ${cable.capacityTbps ? `
         <div class="popup-section">
-          <span class="section-label">Cable Info</span>
+          <span class="section-label">${t('popups.cable.health.cableInfo')}</span>
           <div class="popup-tags">
             <span class="popup-tag">${cable.capacityTbps} Tbps</span>
             ${cable.rfsYear ? `<span class="popup-tag">RFS ${cable.rfsYear}</span>` : ''}

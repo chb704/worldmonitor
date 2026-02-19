@@ -367,7 +367,7 @@ export class MapComponent {
       irradiators: 'components.deckgl.layers.gammaIrradiators',
       military: 'components.deckgl.layers.militaryActivity',
       cables: 'components.deckgl.layers.underseaCables',
-      cableHealth: 'Cables: Health',
+      cableHealth: 'components.deckgl.layers.cableHealth',
       pipelines: 'components.deckgl.layers.pipelines',
       outages: 'components.deckgl.layers.internetOutages',
       datacenters: 'components.deckgl.layers.aiDataCenters',

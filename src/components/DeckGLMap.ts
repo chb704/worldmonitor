@@ -1158,7 +1158,7 @@ export class DeckGLMap {
     const healthMap = this.healthByCableId;
     const cacheKey = 'cables-layer';
     const highlightSignature = this.getSetSignature(highlightedCables);
-    const healthSignature = healthEnabled ? Object.keys(healthMap).sort().join(',') : '';
+    const healthSignature = healthEnabled ? Object.entries(healthMap).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}:${v.status}`).join(',') : '';
 
     // Skip cache when health state changes
     const cached = this.layerCache.get(cacheKey) as PathLayer | undefined;
@@ -1193,23 +1193,12 @@ export class DeckGLMap {
         }
         return 1;
       },
-      getDashArray: (d: { id: string }) => {
-        if (healthEnabled) {
-          const h = healthMap[d.id];
-          if (h?.status === 'fault') return [8, 4];
-        }
-        return [0, 0];
-      },
-      dashJustified: true,
-      extensions: [],
       widthMinPixels: 1,
       widthMaxPixels: 8,
       pickable: true,
       updateTriggers: {
-        highlighted: highlightSignature,
-        getColor: healthSignature,
-        getWidth: healthSignature,
-        getDashArray: healthSignature,
+        getColor: [healthSignature, highlightSignature],
+        getWidth: [healthSignature, highlightSignature],
       },
     });
 
@@ -2786,7 +2775,7 @@ export class DeckGLMap {
         { key: 'cloudRegions', label: t('components.deckgl.layers.cloudRegions'), icon: '&#9729;' },
         { key: 'datacenters', label: t('components.deckgl.layers.aiDataCenters'), icon: '&#128421;' },
         { key: 'cables', label: t('components.deckgl.layers.underseaCables'), icon: '&#128268;' },
-        { key: 'cableHealth', label: 'Cables: Health', icon: '&#128154;' },
+        { key: 'cableHealth', label: t('components.deckgl.layers.cableHealth'), icon: '&#128154;' },
         { key: 'outages', label: t('components.deckgl.layers.internetOutages'), icon: '&#128225;' },
         { key: 'cyberThreats', label: t('components.deckgl.layers.cyberThreats'), icon: '&#128737;' },
         { key: 'techEvents', label: t('components.deckgl.layers.techEvents'), icon: '&#128197;' },
@@ -2801,7 +2790,7 @@ export class DeckGLMap {
           { key: 'commodityHubs', label: t('components.deckgl.layers.commodityHubs'), icon: '&#128230;' },
           { key: 'gulfInvestments', label: t('components.deckgl.layers.gulfInvestments'), icon: '&#127760;' },
           { key: 'cables', label: t('components.deckgl.layers.underseaCables'), icon: '&#128268;' },
-          { key: 'cableHealth', label: 'Cables: Health', icon: '&#128154;' },
+          { key: 'cableHealth', label: t('components.deckgl.layers.cableHealth'), icon: '&#128154;' },
           { key: 'pipelines', label: t('components.deckgl.layers.pipelines'), icon: '&#128738;' },
           { key: 'outages', label: t('components.deckgl.layers.internetOutages'), icon: '&#128225;' },
           { key: 'weather', label: t('components.deckgl.layers.weatherAlerts'), icon: '&#9928;' },
@@ -2818,7 +2807,7 @@ export class DeckGLMap {
         { key: 'irradiators', label: t('components.deckgl.layers.gammaIrradiators'), icon: '&#9888;' },
         { key: 'spaceports', label: t('components.deckgl.layers.spaceports'), icon: '&#128640;' },
         { key: 'cables', label: t('components.deckgl.layers.underseaCables'), icon: '&#128268;' },
-        { key: 'cableHealth', label: 'Cables: Health', icon: '&#128154;' },
+        { key: 'cableHealth', label: t('components.deckgl.layers.cableHealth'), icon: '&#128154;' },
         { key: 'pipelines', label: t('components.deckgl.layers.pipelines'), icon: '&#128738;' },
         { key: 'datacenters', label: t('components.deckgl.layers.aiDataCenters'), icon: '&#128421;' },
         { key: 'military', label: t('components.deckgl.layers.militaryActivity'), icon: '&#9992;' },
@@ -3305,6 +3294,7 @@ export class DeckGLMap {
   public setCableActivity(advisories: CableAdvisory[], repairShips: RepairShip[]): void {
     this.cableAdvisories = advisories;
     this.repairShips = repairShips;
+    this.popup.setCableActivity(advisories, repairShips);
     this.render();
   }
 

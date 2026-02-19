@@ -1326,7 +1326,7 @@ recencyWeight = clamp(1 - ageSeconds / ttlSeconds, 0, 1)
 
 The composite health per cable uses the maximum effective signal. Key rules:
 
-1. **Conservative attribution**: Fault status requires an `operator_fault` signal with effective score >= 0.50. Repair activity alone caps at "degraded".
+1. **Conservative attribution**: Fault status requires both a top composite score >= 0.80 **and** an `operator_fault` signal with effective score >= 0.50. Repair activity alone caps at "degraded".
 2. **Confidence weighting**: Name-matched cables receive higher confidence (0.8-0.9) than geometry-matched (distance-degraded).
 3. **Time decay**: Signals gradually lose influence and are fully excluded once they exceed their TTL.
 4. **Evidence-first**: Up to 3 evidence items are surfaced per cable, including source, summary, and timestamp.
@@ -1353,7 +1353,7 @@ The `data/landing-asn.json` file maps each cable's landing points to local ASNs 
 }
 ```
 
-Currently 16 cables with 60+ landing points are mapped. This data supports planned Phase 2-4 signal adapters for inferred degradation.
+Currently 18 cables with 69 landing points are mapped. This data supports planned Phase 2-4 signal adapters for inferred degradation.
 
 ### API Endpoint
 

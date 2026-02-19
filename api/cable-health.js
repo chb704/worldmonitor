@@ -145,7 +145,7 @@ const CABLE_LANDINGS = {
   seamewe6: [[1.35, 103.82], [19.08, 72.88], [25.13, 56.34], [21.49, 39.19], [29.97, 32.55], [43.30, 5.37]],
   flag: [[50.04, -5.66], [31.20, 29.92], [25.20, 55.27], [19.08, 72.88], [1.35, 103.82], [35.69, 139.69]],
   '2africa': [[50.83, -4.55], [38.72, -9.14], [14.69, -17.44], [6.52, 3.38], [-33.93, 18.42], [-4.04, 39.67], [21.49, 39.19], [31.26, 32.30]],
-  wacs: [[-33.93, 18.42], [6.52, 3.38], [14.69, -17.44], [38.72, -9.14], [50.83, -4.55]],
+  wacs: [[-33.93, 18.42], [6.52, 3.38], [14.69, -17.44], [38.72, -9.14], [51.51, -0.13]],
   eassy: [[-29.85, 31.02], [-25.97, 32.58], [-6.80, 39.28], [-4.04, 39.67], [11.59, 43.15]],
   sam1: [[-22.91, -43.17], [-34.60, -58.38], [26.36, -80.08]],
   ellalink: [[38.72, -9.14], [-3.72, -38.52]],
@@ -203,7 +203,7 @@ function findNearestCable(lat, lon) {
 
 function parseIssueDate(dateStr) {
   const m = dateStr?.match(/(\d{2})(\d{4})Z\s+([A-Z]{3})\s+(\d{4})/i);
-  if (!m) return new Date();
+  if (!m) return new Date(0); // epoch: signal will decay to zero immediately
   const months = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
   return new Date(Date.UTC(
     parseInt(m[4], 10),
@@ -363,8 +363,8 @@ function computeHealthMap(signals) {
     if (topScore >= 0.80 && hasOperatorFault) {
       status = 'fault';
     } else if (topScore >= 0.80 && hasRepairActivity) {
-      // Repair activity alone can only go to degraded unless operator fault confirms
-      status = hasOperatorFault ? 'fault' : 'degraded';
+      // Repair activity alone caps at degraded (operator fault required for fault)
+      status = 'degraded';
     } else if (topScore >= 0.50) {
       status = 'degraded';
     } else {
