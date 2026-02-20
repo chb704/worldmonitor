@@ -181,8 +181,6 @@ function getOverlayColors() {
     cableHighlight: [255, 100, 100, 200] as [number, number, number, number],
     cableFault: [255, 50, 50, 220] as [number, number, number, number],
     cableDegraded: [255, 165, 0, 200] as [number, number, number, number],
-    cableOk: [0, 200, 100, 160] as [number, number, number, number],
-    cableUnknown: [100, 100, 100, 120] as [number, number, number, number],
     earthquake: [255, 100, 50, 200] as [number, number, number, number],
     vesselMilitary: [255, 100, 100, 220] as [number, number, number, number],
     flightMilitary: [255, 50, 50, 220] as [number, number, number, number],
@@ -925,8 +923,8 @@ export class DeckGLMap {
     const filteredMilitaryVesselClusters = this.filterMilitaryVesselClustersByTime(this.militaryVesselClusters);
     const filteredUcdpEvents = this.filterByTime(this.ucdpEvents, (event) => event.date_start);
 
-    // Undersea cables layer (also shown when cableHealth is enabled)
-    if (mapLayers.cables || mapLayers.cableHealth) {
+    // Undersea cables layer (health problems auto-highlighted)
+    if (mapLayers.cables) {
       layers.push(this.createCablesLayer());
     }
 
@@ -1025,13 +1023,13 @@ export class DeckGLMap {
       layers.push(this.createPortsLayer());
     }
 
-    // Cable advisories layer (shown with cables or cableHealth)
-    if ((mapLayers.cables || mapLayers.cableHealth) && filteredCableAdvisories.length > 0) {
+    // Cable advisories layer
+    if (mapLayers.cables && filteredCableAdvisories.length > 0) {
       layers.push(this.createCableAdvisoriesLayer(filteredCableAdvisories));
     }
 
-    // Repair ships layer (shown with cables or cableHealth)
-    if ((mapLayers.cables || mapLayers.cableHealth) && this.repairShips.length > 0) {
+    // Repair ships layer
+    if (mapLayers.cables && this.repairShips.length > 0) {
       layers.push(this.createRepairShipsLayer());
     }
 
@@ -1154,13 +1152,16 @@ export class DeckGLMap {
   // Layer creation methods
   private createCablesLayer(): PathLayer {
     const highlightedCables = this.highlightedAssets.cable;
-    const healthEnabled = this.state.layers.cableHealth;
     const healthMap = this.healthByCableId;
     const cacheKey = 'cables-layer';
     const highlightSignature = this.getSetSignature(highlightedCables);
-    const healthSignature = healthEnabled ? Object.entries(healthMap).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}:${v.status}`).join(',') : '';
+    // Only track fault/degraded cables for cache invalidation (ok/unknown use default color)
+    const healthSignature = Object.entries(healthMap)
+      .filter(([, v]) => v.status === 'fault' || v.status === 'degraded')
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}:${v.status}`)
+      .join(',');
 
-    // Skip cache when health state changes
     const cached = this.layerCache.get(cacheKey) as PathLayer | undefined;
     if (cached && highlightSignature === this.lastCableHighlightSignature && healthSignature === this.lastCableHealthSignature) return cached;
 
@@ -1170,27 +1171,17 @@ export class DeckGLMap {
       getPath: (d) => d.points,
       getColor: (d) => {
         if (highlightedCables.has(d.id)) return COLORS.cableHighlight;
-        if (healthEnabled) {
-          const h = healthMap[d.id];
-          if (h) {
-            switch (h.status) {
-              case 'fault': return COLORS.cableFault;
-              case 'degraded': return COLORS.cableDegraded;
-              case 'ok': return COLORS.cableOk;
-              default: return COLORS.cableUnknown;
-            }
-          }
-          return COLORS.cableUnknown;
-        }
+        // Highlight only problems — fault/degraded get distinct colors, everything else stays default
+        const h = healthMap[d.id];
+        if (h?.status === 'fault') return COLORS.cableFault;
+        if (h?.status === 'degraded') return COLORS.cableDegraded;
         return COLORS.cable;
       },
       getWidth: (d) => {
         if (highlightedCables.has(d.id)) return 3;
-        if (healthEnabled) {
-          const h = healthMap[d.id];
-          if (h?.status === 'fault') return 4;
-          if (h?.status === 'degraded') return 2.5;
-        }
+        const h = healthMap[d.id];
+        if (h?.status === 'fault') return 4;
+        if (h?.status === 'degraded') return 2.5;
         return 1;
       },
       widthMinPixels: 1,
@@ -2649,11 +2640,6 @@ export class DeckGLMap {
     let popupType = layerToPopupType[layerId];
     if (!popupType) return;
 
-    // When cableHealth layer is enabled, cable clicks show the health popup
-    if (popupType === 'cable' && this.state.layers.cableHealth) {
-      popupType = 'cable-health';
-    }
-
     // For GeoJSON layers, the data is in properties
     let data = info.object;
     if (layerId === 'conflict-zones-layer' && info.object.properties) {
@@ -2775,7 +2761,6 @@ export class DeckGLMap {
         { key: 'cloudRegions', label: t('components.deckgl.layers.cloudRegions'), icon: '&#9729;' },
         { key: 'datacenters', label: t('components.deckgl.layers.aiDataCenters'), icon: '&#128421;' },
         { key: 'cables', label: t('components.deckgl.layers.underseaCables'), icon: '&#128268;' },
-        { key: 'cableHealth', label: t('components.deckgl.layers.cableHealth'), icon: '&#128154;' },
         { key: 'outages', label: t('components.deckgl.layers.internetOutages'), icon: '&#128225;' },
         { key: 'cyberThreats', label: t('components.deckgl.layers.cyberThreats'), icon: '&#128737;' },
         { key: 'techEvents', label: t('components.deckgl.layers.techEvents'), icon: '&#128197;' },
@@ -2790,7 +2775,6 @@ export class DeckGLMap {
           { key: 'commodityHubs', label: t('components.deckgl.layers.commodityHubs'), icon: '&#128230;' },
           { key: 'gulfInvestments', label: t('components.deckgl.layers.gulfInvestments'), icon: '&#127760;' },
           { key: 'cables', label: t('components.deckgl.layers.underseaCables'), icon: '&#128268;' },
-          { key: 'cableHealth', label: t('components.deckgl.layers.cableHealth'), icon: '&#128154;' },
           { key: 'pipelines', label: t('components.deckgl.layers.pipelines'), icon: '&#128738;' },
           { key: 'outages', label: t('components.deckgl.layers.internetOutages'), icon: '&#128225;' },
           { key: 'weather', label: t('components.deckgl.layers.weatherAlerts'), icon: '&#9928;' },
@@ -2807,7 +2791,6 @@ export class DeckGLMap {
         { key: 'irradiators', label: t('components.deckgl.layers.gammaIrradiators'), icon: '&#9888;' },
         { key: 'spaceports', label: t('components.deckgl.layers.spaceports'), icon: '&#128640;' },
         { key: 'cables', label: t('components.deckgl.layers.underseaCables'), icon: '&#128268;' },
-        { key: 'cableHealth', label: t('components.deckgl.layers.cableHealth'), icon: '&#128154;' },
         { key: 'pipelines', label: t('components.deckgl.layers.pipelines'), icon: '&#128738;' },
         { key: 'datacenters', label: t('components.deckgl.layers.aiDataCenters'), icon: '&#128421;' },
         { key: 'military', label: t('components.deckgl.layers.militaryActivity'), icon: '&#9992;' },

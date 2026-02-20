@@ -3074,8 +3074,10 @@ export class App {
     if (this.mapLayers.natural) tasks.push({ name: 'natural', task: runGuarded('natural', () => this.loadNatural()) });
     if (this.mapLayers.weather) tasks.push({ name: 'weather', task: runGuarded('weather', () => this.loadWeatherAlerts()) });
     if (this.mapLayers.ais) tasks.push({ name: 'ais', task: runGuarded('ais', () => this.loadAisSignals()) });
-    if (this.mapLayers.cables || this.mapLayers.cableHealth) tasks.push({ name: 'cables', task: runGuarded('cables', () => this.loadCableActivity()) });
-    if (this.mapLayers.cableHealth) tasks.push({ name: 'cableHealth', task: runGuarded('cableHealth', () => this.loadCableHealth()) });
+    if (this.mapLayers.cables) {
+      tasks.push({ name: 'cables', task: runGuarded('cables', () => this.loadCableActivity()) });
+      tasks.push({ name: 'cableHealth', task: runGuarded('cableHealth', () => this.loadCableHealth()) });
+    }
     if (this.mapLayers.flights) tasks.push({ name: 'flights', task: runGuarded('flights', () => this.loadFlightDelays()) });
     if (CYBER_LAYER_ENABLED && this.mapLayers.cyberThreats) tasks.push({ name: 'cyberThreats', task: runGuarded('cyberThreats', () => this.loadCyberThreats()) });
     if (this.mapLayers.techEvents || SITE_VARIANT === 'tech') tasks.push({ name: 'techEvents', task: runGuarded('techEvents', () => this.loadTechEvents()) });
@@ -3124,9 +3126,6 @@ export class App {
           await this.loadAisSignals();
           break;
         case 'cables':
-          await this.loadCableActivity();
-          break;
-        case 'cableHealth':
           await this.loadCableActivity();
           await this.loadCableHealth();
           break;
@@ -4493,8 +4492,8 @@ export class App {
     // NOTE: outages, protests, military are refreshed by intelligence schedule above
     this.scheduleRefresh('firms', () => this.loadFirmsData(), 30 * 60 * 1000);
     this.scheduleRefresh('ais', () => this.loadAisSignals(), REFRESH_INTERVALS.ais, () => this.mapLayers.ais);
-    this.scheduleRefresh('cables', () => this.loadCableActivity(), 30 * 60 * 1000, () => this.mapLayers.cables || this.mapLayers.cableHealth);
-    this.scheduleRefresh('cableHealth', () => this.loadCableHealth(), 5 * 60 * 1000, () => this.mapLayers.cableHealth);
+    this.scheduleRefresh('cables', () => this.loadCableActivity(), 30 * 60 * 1000, () => this.mapLayers.cables);
+    this.scheduleRefresh('cableHealth', () => this.loadCableHealth(), 5 * 60 * 1000, () => this.mapLayers.cables);
     this.scheduleRefresh('flights', () => this.loadFlightDelays(), 10 * 60 * 1000, () => this.mapLayers.flights);
     this.scheduleRefresh('cyberThreats', () => {
       this.cyberThreatsCache = null;

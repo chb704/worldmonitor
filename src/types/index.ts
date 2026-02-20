@@ -563,8 +563,6 @@ export interface MapLayers {
   spaceports: boolean;
   minerals: boolean;
   fires: boolean;
-  // Cable health layer
-  cableHealth: boolean;
   // Data source layers
   ucdpEvents: boolean;
   displacement: boolean;

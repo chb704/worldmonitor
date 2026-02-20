@@ -12,7 +12,7 @@ import { fetchHotspotContext, formatArticleDate, extractDomain, type GdeltArticl
 import { getNaturalEventIcon } from '@/services/eonet';
 import { getHotspotEscalation, getEscalationChange24h } from '@/services/hotspot-escalation';
 
-export type PopupType = 'conflict' | 'hotspot' | 'earthquake' | 'weather' | 'base' | 'waterway' | 'apt' | 'cyberThreat' | 'nuclear' | 'economic' | 'irradiator' | 'pipeline' | 'cable' | 'cable-health' | 'cable-advisory' | 'repair-ship' | 'outage' | 'datacenter' | 'datacenterCluster' | 'ais' | 'protest' | 'protestCluster' | 'flight' | 'militaryFlight' | 'militaryVessel' | 'militaryFlightCluster' | 'militaryVesselCluster' | 'natEvent' | 'port' | 'spaceport' | 'mineral' | 'startupHub' | 'cloudRegion' | 'techHQ' | 'accelerator' | 'techEvent' | 'techHQCluster' | 'techEventCluster' | 'techActivity' | 'geoActivity' | 'stockExchange' | 'financialCenter' | 'centralBank' | 'commodityHub';
+export type PopupType = 'conflict' | 'hotspot' | 'earthquake' | 'weather' | 'base' | 'waterway' | 'apt' | 'cyberThreat' | 'nuclear' | 'economic' | 'irradiator' | 'pipeline' | 'cable' | 'cable-advisory' | 'repair-ship' | 'outage' | 'datacenter' | 'datacenterCluster' | 'ais' | 'protest' | 'protestCluster' | 'flight' | 'militaryFlight' | 'militaryVessel' | 'militaryFlightCluster' | 'militaryVesselCluster' | 'natEvent' | 'port' | 'spaceport' | 'mineral' | 'startupHub' | 'cloudRegion' | 'techHQ' | 'accelerator' | 'techEvent' | 'techHQCluster' | 'techEventCluster' | 'techActivity' | 'geoActivity' | 'stockExchange' | 'financialCenter' | 'centralBank' | 'commodityHub';
 
 interface TechEventPopupData {
   id: string;
@@ -363,8 +363,6 @@ export class MapPopup {
         return this.renderPipelinePopup(data.data as Pipeline);
       case 'cable':
         return this.renderCablePopup(data.data as UnderseaCable);
-      case 'cable-health':
-        return this.renderCableHealthPopup(data.data as UnderseaCable);
       case 'cable-advisory':
         return this.renderCableAdvisoryPopup(data.data as CableAdvisory);
       case 'repair-ship':
@@ -1326,8 +1324,18 @@ export class MapPopup {
   private renderCablePopup(cable: UnderseaCable): string {
     const advisory = this.getLatestCableAdvisory(cable.id);
     const repairShip = this.getPriorityRepairShip(cable.id);
-    const statusLabel = advisory ? (advisory.severity === 'fault' ? t('popups.cable.fault') : t('popups.cable.degraded')) : t('popups.cable.active');
-    const statusBadge = advisory ? (advisory.severity === 'fault' ? 'high' : 'elevated') : 'low';
+    const health = getCableHealthRecord(cable.id);
+
+    // Determine status: health data takes priority if it indicates a problem
+    const hasFaultOrDegraded = health && (health.status === 'fault' || health.status === 'degraded');
+    const statusLabel = hasFaultOrDegraded
+      ? (health.status === 'fault' ? t('popups.cable.fault') : t('popups.cable.degraded'))
+      : advisory ? (advisory.severity === 'fault' ? t('popups.cable.fault') : t('popups.cable.degraded'))
+      : t('popups.cable.active');
+    const statusBadge = hasFaultOrDegraded
+      ? (health.status === 'fault' ? 'high' : 'elevated')
+      : advisory ? (advisory.severity === 'fault' ? 'high' : 'elevated')
+      : 'low';
     const repairEta = repairShip?.eta || advisory?.repairEta;
     const cableName = escapeHtml(cable.name.toUpperCase());
     const safeStatusLabel = escapeHtml(statusLabel);
@@ -1337,6 +1345,25 @@ export class MapPopup {
     const advisoryDescription = advisory ? escapeHtml(advisory.description) : '';
     const repairShipName = repairShip ? escapeHtml(repairShip.name) : '';
     const repairShipNote = repairShip ? escapeHtml(repairShip.note || t('popups.repairShip.note')) : '';
+
+    // Health evidence section (only for fault/degraded)
+    const healthEvidenceHtml = hasFaultOrDegraded && health.evidence.length > 0
+      ? `<div class="popup-section">
+          <span class="section-label">${t('popups.cable.health.evidence')}</span>
+          <div class="popup-evidence-list">
+            ${health.evidence.map(e => {
+              const evidenceTime = e.ts ? this.getTimeAgo(new Date(e.ts)) : '';
+              return `
+                <div class="popup-evidence-item">
+                  <span class="evidence-source">${escapeHtml(e.source)}</span>
+                  <span class="evidence-time">${evidenceTime}</span>
+                  <p class="evidence-summary">${escapeHtml(e.summary)}</p>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>`
+      : '';
 
     return `
       <div class="popup-header cable">
@@ -1366,6 +1393,7 @@ export class MapPopup {
           </div>
           ` : ''}
         </div>
+        ${healthEvidenceHtml}
         ${advisory ? `
           <div class="popup-section">
             <span class="section-label">${t('popups.cable.advisory')}</span>
@@ -1463,99 +1491,6 @@ export class MapPopup {
           ` : ''}
         </div>
         <p class="popup-description">${shipNote}</p>
-      </div>
-    `;
-  }
-
-  private renderCableHealthPopup(cable: UnderseaCable): string {
-    const health = getCableHealthRecord(cable.id);
-    const cableName = escapeHtml(cable.name.toUpperCase());
-
-    if (!health) {
-      return `
-        <div class="popup-header cable">
-          <span class="popup-title">🌐 ${cableName}</span>
-          <span class="popup-badge low">${t('popups.cable.health.unknown')}</span>
-          <button class="popup-close">×</button>
-        </div>
-        <div class="popup-body">
-          <div class="popup-subtitle">${t('popups.cable.health.title')}</div>
-          <div class="popup-stats">
-            <div class="popup-stat">
-              <span class="stat-label">${t('popups.cable.health.status')}</span>
-              <span class="stat-value">${t('popups.cable.health.noData')}</span>
-            </div>
-          </div>
-          <p class="popup-description">${t('popups.cable.health.noDataDesc')}</p>
-        </div>
-      `;
-    }
-
-    const statusIcon = health.status === 'fault' ? '🔴'
-      : health.status === 'degraded' ? '🟠'
-      : health.status === 'ok' ? '🟢' : '⚪';
-    const badgeClass = health.status === 'fault' ? 'high'
-      : health.status === 'degraded' ? 'elevated' : 'low';
-    const statusLabel = health.status.charAt(0).toUpperCase() + health.status.slice(1);
-    const scorePercent = Math.round(health.score * 100);
-    const confidencePercent = Math.round(health.confidence * 100);
-    const lastUpdated = health.lastUpdated ? this.getTimeAgo(new Date(health.lastUpdated)) : 'N/A';
-
-    const evidenceHtml = health.evidence.length > 0
-      ? health.evidence.map(e => {
-          const evidenceTime = e.ts ? this.getTimeAgo(new Date(e.ts)) : '';
-          return `
-            <div class="popup-evidence-item">
-              <span class="evidence-source">${escapeHtml(e.source)}</span>
-              <span class="evidence-time">${evidenceTime}</span>
-              <p class="evidence-summary">${escapeHtml(e.summary)}</p>
-            </div>
-          `;
-        }).join('')
-      : `<p class="popup-description">${t('popups.cable.health.noSignals')}</p>`;
-
-    return `
-      <div class="popup-header cable">
-        <span class="popup-title">${statusIcon} ${cableName}</span>
-        <span class="popup-badge ${badgeClass}">${statusLabel}</span>
-        <button class="popup-close">×</button>
-      </div>
-      <div class="popup-body">
-        <div class="popup-subtitle">${t('popups.cable.health.title')}</div>
-        <div class="popup-stats">
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.cable.health.status')}</span>
-            <span class="stat-value">${statusLabel}</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.cable.health.score')}</span>
-            <span class="stat-value">${scorePercent}%</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.cable.health.confidence')}</span>
-            <span class="stat-value">${confidencePercent}%</span>
-          </div>
-          <div class="popup-stat">
-            <span class="stat-label">${t('popups.cable.health.lastUpdate')}</span>
-            <span class="stat-value">${lastUpdated}</span>
-          </div>
-        </div>
-        <div class="popup-section">
-          <span class="section-label">${t('popups.cable.health.evidence')}</span>
-          <div class="popup-evidence-list">
-            ${evidenceHtml}
-          </div>
-        </div>
-        ${cable.capacityTbps ? `
-        <div class="popup-section">
-          <span class="section-label">${t('popups.cable.health.cableInfo')}</span>
-          <div class="popup-tags">
-            <span class="popup-tag">${cable.capacityTbps} Tbps</span>
-            ${cable.rfsYear ? `<span class="popup-tag">RFS ${cable.rfsYear}</span>` : ''}
-            ${cable.major ? '<span class="popup-tag">Major</span>' : ''}
-          </div>
-        </div>
-        ` : ''}
       </div>
     `;
   }

@@ -2959,18 +2959,6 @@ body.playback-mode .status-dot {
   filter: drop-shadow(0 0 4px rgba(255, 165, 0, 0.5));
 }
 
-.cable-path.cable-health-ok {
-  stroke: #00c864;
-  stroke-width: 1.5;
-  opacity: 0.7;
-}
-
-.cable-path.cable-health-unknown {
-  stroke: #666;
-  stroke-width: 1;
-  opacity: 0.4;
-}
-
 @keyframes cable-health-fault-pulse {
   0%, 100% { opacity: 0.9; }
   50% { opacity: 0.5; }
