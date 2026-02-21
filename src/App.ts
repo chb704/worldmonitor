@@ -774,9 +774,9 @@ export class App {
   }
 
   private setupMapLayerHandlers(): void {
-    this.map?.setOnLayerChange((layer, enabled) => {
-      console.log(`[App.onLayerChange] ${layer}: ${enabled}`);
-      trackMapLayerToggle(layer, enabled, 'user');
+    this.map?.setOnLayerChange((layer, enabled, source) => {
+      console.log(`[App.onLayerChange] ${layer}: ${enabled} (${source})`);
+      trackMapLayerToggle(layer, enabled, source);
       // Save layer settings
       this.mapLayers[layer] = enabled;
       saveToStorage(STORAGE_KEYS.mapLayers, this.mapLayers);

@@ -116,7 +116,10 @@ initMetaTags();
 
 // In desktop mode, route /api/* calls to the local Tauri sidecar backend.
 installRuntimeFetchPatch();
-loadDesktopSecrets().then(() => trackApiKeysSnapshot()).catch(() => {});
+loadDesktopSecrets().then(async () => {
+  await initAnalytics();
+  trackApiKeysSnapshot();
+}).catch(() => {});
 
 // Apply stored theme preference before app initialization (safety net for inline script)
 applyStoredTheme();
