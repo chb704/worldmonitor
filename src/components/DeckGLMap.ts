@@ -136,8 +136,13 @@ const MAP_INTERACTION_MODE: MapInteractionMode =
   import.meta.env.VITE_MAP_INTERACTION_MODE === 'flat' ? 'flat' : '3d';
 
 // Theme-aware basemap vector style URLs (English labels, no local scripts)
-const DARK_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-const LIGHT_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+// Happy variant uses self-hosted warm styles; default uses CARTO CDN
+const DARK_STYLE = SITE_VARIANT === 'happy'
+  ? '/map-styles/happy-dark.json'
+  : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+const LIGHT_STYLE = SITE_VARIANT === 'happy'
+  ? '/map-styles/happy-light.json'
+  : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
 // Zoom thresholds for layer visibility and labels (matches old Map.ts)
 // Zoom-dependent layer visibility and labels
