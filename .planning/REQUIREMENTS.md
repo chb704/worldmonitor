@@ -9,9 +9,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Variant Infrastructure
 
-- [ ] **INFRA-01**: Happy variant config (`VITE_VARIANT=happy`) registered in variant architecture with panel/feed/layer definitions
-- [ ] **INFRA-02**: Subdomain routing for happy.worldmonitor.app via Vercel config
-- [ ] **INFRA-03**: Variant-specific metadata (title, description, OG tags, favicon) for happy subdomain
+- [x] **INFRA-01**: Happy variant config (`VITE_VARIANT=happy`) registered in variant architecture with panel/feed/layer definitions
+- [x] **INFRA-02**: Subdomain routing for happy.worldmonitor.app via Vercel config
+- [x] **INFRA-03**: Variant-specific metadata (title, description, OG tags, favicon) for happy subdomain
 
 ### Visual Theme
 
@@ -132,9 +132,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Complete |
+| INFRA-02 | Phase 1 | Complete |
+| INFRA-03 | Phase 1 | Complete |
 | THEME-01 | Phase 1 | Pending |
 | THEME-02 | Phase 1 | Pending |
 | THEME-03 | Phase 1 | Pending |
