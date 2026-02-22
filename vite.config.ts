@@ -172,6 +172,14 @@ function htmlVariantPlugin(): Plugin {
         .replace(/"description": "Real-time global intelligence dashboard with live news, markets, military tracking, infrastructure monitoring, and geopolitical data."/, `"description": "${activeMeta.description}"`)
         .replace(/"featureList": \[[\s\S]*?\]/, `"featureList": ${JSON.stringify(activeMeta.features, null, 8).replace(/\n/g, '\n      ')}`);
 
+      // Theme-color meta — warm cream for happy variant
+      if (activeVariant === 'happy') {
+        result = result.replace(
+          /<meta name="theme-color" content=".*?" \/>/,
+          '<meta name="theme-color" content="#FAFAF5" />'
+        );
+      }
+
       // Favicon variant paths — replace /favico/ paths with variant-specific subdirectory
       if (activeVariant !== 'full') {
         result = result
