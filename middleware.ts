@@ -13,6 +13,7 @@ const SOCIAL_PREVIEW_UA =
 
 const SOCIAL_PREVIEW_PATHS = new Set(['/api/story', '/api/og-story']);
 const PROTECTED_PATH_BYPASSES = ['/favicon.ico'];
+const runtimeEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 
 interface BasicCredentials {
   username: string;
@@ -42,10 +43,10 @@ function isProtectedPath(path: string): boolean {
 }
 
 function isRequestAuthorized(request: Request): boolean {
-  const expectedPassword = process.env.APP_PASSWORD?.trim();
+  const expectedPassword = runtimeEnv.APP_PASSWORD?.trim();
   if (!expectedPassword) return true;
 
-  const expectedUsername = process.env.APP_USERNAME?.trim() ?? '';
+  const expectedUsername = runtimeEnv.APP_USERNAME?.trim() ?? '';
   const credentials = parseBasicCredentials(request.headers.get('authorization'));
   if (!credentials) return false;
   if (credentials.password !== expectedPassword) return false;
@@ -54,7 +55,7 @@ function isRequestAuthorized(request: Request): boolean {
 }
 
 function unauthorizedResponse(): Response {
-  const realm = process.env.APP_AUTH_REALM?.trim() || 'WorldMonitor';
+  const realm = runtimeEnv.APP_AUTH_REALM?.trim() || 'WorldMonitor';
   return new Response('Authentication required', {
     status: 401,
     headers: {
