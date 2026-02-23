@@ -132,108 +132,14 @@ requestAnimationFrame(() => {
 // Clear stale settings-open flag (survives ungraceful shutdown)
 localStorage.removeItem('wm-settings-open');
 
-const PASSWORD_GATE_STORAGE_KEY = 'worldmonitor-password-gate';
-const PASSWORD_GATE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-const passwordGatePassword = import.meta.env.VITE_APP_PASSWORD?.trim() ?? '';
-
-interface PasswordGateSession {
-  expiresAt: number;
-}
-
-function hasValidPasswordGateSession(): boolean {
-  try {
-    const raw = localStorage.getItem(PASSWORD_GATE_STORAGE_KEY);
-    if (!raw) return false;
-    const session = JSON.parse(raw) as Partial<PasswordGateSession>;
-    if (typeof session.expiresAt !== 'number') {
-      localStorage.removeItem(PASSWORD_GATE_STORAGE_KEY);
-      return false;
-    }
-    if (session.expiresAt <= Date.now()) {
-      localStorage.removeItem(PASSWORD_GATE_STORAGE_KEY);
-      return false;
-    }
-    return true;
-  } catch {
-    localStorage.removeItem(PASSWORD_GATE_STORAGE_KEY);
-    return false;
-  }
-}
-
-function persistPasswordGateSession(): void {
-  const session: PasswordGateSession = { expiresAt: Date.now() + PASSWORD_GATE_TTL_MS };
-  try {
-    localStorage.setItem(PASSWORD_GATE_STORAGE_KEY, JSON.stringify(session));
-  } catch {
-    // localStorage can be blocked; allow this session but skip persistence
-  }
-}
-
-function showPasswordGate(expectedPassword: string): Promise<void> {
-  return new Promise((resolve) => {
-    const overlay = document.createElement('div');
-    overlay.className = 'password-gate-overlay';
-    overlay.innerHTML = `
-      <div class="password-gate-card" role="dialog" aria-modal="true" aria-labelledby="password-gate-title">
-        <h1 id="password-gate-title" class="password-gate-title">Enter Password</h1>
-        <p class="password-gate-description">This site is protected. Enter the password to continue.</p>
-        <form class="password-gate-form">
-          <label class="password-gate-label" for="password-gate-input">Password</label>
-          <input id="password-gate-input" class="password-gate-input" type="password" autocomplete="current-password" required />
-          <p class="password-gate-error" role="alert" aria-live="polite"></p>
-          <button class="password-gate-submit" type="submit">Unlock</button>
-        </form>
-      </div>
-    `;
-
-    const form = overlay.querySelector('.password-gate-form');
-    const input = overlay.querySelector('.password-gate-input');
-    const error = overlay.querySelector('.password-gate-error');
-
-    if (!(form instanceof HTMLFormElement) || !(input instanceof HTMLInputElement) || !(error instanceof HTMLElement)) {
-      resolve();
-      return;
-    }
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      if (input.value === expectedPassword) {
-        persistPasswordGateSession();
-        overlay.remove();
-        resolve();
-        return;
-      }
-      error.textContent = 'Incorrect password. Please try again.';
-      input.value = '';
-      input.focus();
-    });
-
-    input.addEventListener('input', () => {
-      if (error.textContent) error.textContent = '';
-    });
-
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => {
-      input.focus();
-    });
-  });
-}
-
-async function ensurePasswordGate(): Promise<void> {
-  if (!passwordGatePassword) return;
-  if (hasValidPasswordGateSession()) return;
-  await showPasswordGate(passwordGatePassword);
-}
-
-async function bootstrapApp(): Promise<void> {
-  await ensurePasswordGate();
-  const app = new App('app');
-  await app.init();
-  // Clear the one-shot guard after a successful boot so future stale-chunk incidents can recover.
-  clearChunkReloadGuard(chunkReloadStorageKey);
-}
-
-void bootstrapApp().catch(console.error);
+const app = new App('app');
+app
+  .init()
+  .then(() => {
+    // Clear the one-shot guard after a successful boot so future stale-chunk incidents can recover.
+    clearChunkReloadGuard(chunkReloadStorageKey);
+  })
+  .catch(console.error);
 
 // Debug helpers for geo-convergence testing (remove in production)
 (window as unknown as Record<string, unknown>).geoDebug = {

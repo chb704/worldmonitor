@@ -1,26 +1,3 @@
-# WorldMonitor - protect API routes from crawlers
+# Private deployment - request no crawling/indexing.
 User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /tests/
-
-# Allow social media bots for OG previews
-User-agent: Twitterbot
-Allow: /api/story
-Allow: /api/og-story
-
-User-agent: facebookexternalhit
-Allow: /api/story
-Allow: /api/og-story
-
-User-agent: LinkedInBot
-Allow: /api/story
-Allow: /api/og-story
-
-User-agent: Slackbot
-Allow: /api/story
-Allow: /api/og-story
-
-User-agent: Discordbot
-Allow: /api/story
-Allow: /api/og-story
+Disallow: /
