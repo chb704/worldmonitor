@@ -61,7 +61,7 @@ function unauthorizedResponse(): Response {
     headers: {
       'Cache-Control': 'no-store',
       'Content-Type': 'text/plain; charset=utf-8',
-      'WWW-Authenticate': `Basic realm="${realm}", charset="UTF-8"`,
+      'WWW-Authenticate': `Basic realm="${realm}"`,
     },
   });
 }
